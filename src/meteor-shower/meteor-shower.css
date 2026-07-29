@@ -1,0 +1,6 @@
+.solid-meteor-shower {
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+}

@@ -1,0 +1,41 @@
+{
+  "name": "@jask-aran/solid-components",
+  "version": "0.1.0",
+  "description": "Portable SolidJS components from jask-aran.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/meteor-shower/index.d.ts",
+      "import": "./dist/meteor-shower/index.js"
+    },
+    "./meteor-shower": {
+      "types": "./dist/meteor-shower/index.d.ts",
+      "import": "./dist/meteor-shower/index.js"
+    },
+    "./meteor-shower.css": "./dist/meteor-shower.css",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "solid-js": "^1.9.0"
+  },
+  "devDependencies": {
+    "solid-js": "^1.9.14",
+    "typescript": "^5.7.3",
+    "vite": "^6.4.3",
+    "vite-plugin-solid": "^2.11.13"
+  },
+  "scripts": {
+    "build": "npm run build:js && npm run build:types",
+    "build:js": "vite build",
+    "build:types": "tsc -p tsconfig.build.json",
+    "dev": "vite --host 0.0.0.0",
+    "typecheck": "tsc --noEmit"
+  }
+}
