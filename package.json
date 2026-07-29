@@ -4,6 +4,14 @@
   "description": "Portable SolidJS components from jask-aran.",
   "license": "MIT",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jask-aran/solid-components.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jask-aran/solid-components/issues"
+  },
+  "homepage": "https://github.com/jask-aran/solid-components#readme",
   "sideEffects": [
     "**/*.css"
   ],
