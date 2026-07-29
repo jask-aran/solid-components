@@ -36,6 +36,7 @@
     "build:js": "vite build",
     "build:types": "tsc -p tsconfig.build.json",
     "dev": "vite --host 0.0.0.0",
+    "prepare": "npm run build",
     "typecheck": "tsc --noEmit"
   }
 }
