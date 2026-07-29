@@ -25,6 +25,13 @@ function Surface() {
 
 `MeteorShower` is the lower-level renderer for applications that precompute their own events with `simulateMeteors`. `DefaultMeteorShower` owns the canonical seed, simulation, element-size tracking, and ten-minute loop.
 
+## Distribution
+
+[`jask-aran/solid-components`](https://github.com/jask-aran/solid-components) is
+the source of truth. Matching `v*` Git tags publish immutable npm releases;
+[Conduit](https://github.com/jask-aran/Conduit) consumes those releases through
+`@jask-aran/solid-components`, never a copied component implementation.
+
 ## Releasing
 
 Publishing is performed by GitHub Actions through npm trusted publishing. Bump the version, commit it, then push its matching `v*` tag:
