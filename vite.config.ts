@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [solid()],
   test: {
     environment: "jsdom",
-    include: ["test/**/*.test.tsx"],
+    include: ["test/**/*.test.{ts,tsx}"],
   },
   build: {
     lib: {

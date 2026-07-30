@@ -32,15 +32,48 @@ the source of truth. Matching `v*` Git tags publish immutable npm releases;
 [Conduit](https://github.com/jask-aran/Conduit) consumes those releases through
 `@jask-aran/solid-components`, never a copied component implementation.
 
-## Releasing
+## Conduit workbench
 
-Publishing is performed by GitHub Actions through npm trusted publishing. Only stable `vX.Y.Z` tags publish; the tag must match `package.json` and point to a commit reachable from `main`. Bump the version, commit it, then push its matching tag:
+Conduit can resolve this checkout directly during sustained component work,
+then run an extracted `npm pack` artifact for approval without changing its
+locked dependency:
 
 ```bash
-npm version patch
+cd ../Conduit
+bash .devcontainer/solid-components.sh dev
+bash .devcontainer/solid-components.sh preview
+```
+
+After the preview is approved, one command creates the chosen stable release,
+waits for npm, installs that exact version in Conduit, and restarts port 4310:
+
+```bash
+bash .devcontainer/solid-components.sh promote patch
+```
+
+Several component changes may be combined into one clean committed candidate.
+
+## Releasing
+
+Publishing is performed by GitHub Actions through npm trusted publishing. Only
+stable `vX.Y.Z` tags publish; the tag must match `package.json` and point to a
+commit reachable from `main`. Use the Conduit promotion command above so the
+tag is created from the approved payload. For repository recovery where no
+Conduit adoption is required, the equivalent lower-level sequence is:
+
+```bash
+npm run verify
+npm version patch --no-git-tag-version
+git add package.json package-lock.json
+git commit -m "Release vX.Y.Z"
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
 git push origin main --follow-tags
 ```
 
 The release workflow validates, builds, and publishes the tag's package version to npm without a stored npm token.
 
-Before the first release, configure npm’s trusted publisher for `jask-aran/solid-components` to use the `jask-aran/solid-components` repository and `.github/workflows/publish.yml`. After its first successful run, disable traditional npm publish tokens.
+Configure npm’s trusted publisher for repository
+`jask-aran/solid-components` and workflow filename `publish.yml`. The GitHub
+“Publish package” page describes the separate GitHub Packages registry; this
+package is published to npmjs and is not expected to appear there. After the
+first successful trusted publication, disable traditional npm publish tokens.

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activeMeteorWindow,
   DefaultMeteorShower,
-  METEOR_RESIZE_DEBOUNCE_MS,
+  retainMeteorWindow,
 } from "../src/meteor-shower/DefaultMeteorShower";
 import { simulateMeteors } from "../src/meteor-shower/simulate";
 import { DEFAULT_SEED, DEFAULT_SETTINGS, type MeteorSettings } from "../src/meteor-shower/types";
@@ -71,7 +71,6 @@ describe("DefaultMeteorShower", () => {
     const shower = container.querySelector(".solid-meteor-shower")!;
     shower.getBoundingClientRect = () => new DOMRect(0, 0, 800, 600);
     TestResizeObserver.instances[0]!.notify(800, 600);
-    vi.advanceTimersByTime(METEOR_RESIZE_DEBOUNCE_MS);
 
     const meteors = container.querySelectorAll(".solid-meteor");
     expect(meteors.length).toBeLessThanOrEqual(boundedSettings.maxActive + 1);
@@ -81,7 +80,7 @@ describe("DefaultMeteorShower", () => {
     dispose();
   });
 
-  it("coalesces resize bursts until the surface has settled", () => {
+  it("records resize bursts without touching the live cycle", () => {
     const container = document.createElement("div");
     document.body.append(container);
     const dispose = render(
@@ -97,12 +96,23 @@ describe("DefaultMeteorShower", () => {
     width = 800;
     observer.notify(width, 600);
 
-    const before = container.querySelector(".solid-meteor")!.style.left;
-    vi.advanceTimersByTime(METEOR_RESIZE_DEBOUNCE_MS - 1);
-    expect(container.querySelector(".solid-meteor")!.style.left).toBe(before);
-    vi.advanceTimersByTime(1);
-    expect(container.querySelector(".solid-meteor")!.style.left).not.toBe(before);
+    const before = container.querySelector(".solid-meteor")!;
+    const beforeLeft = before.style.left;
+    vi.advanceTimersByTime(500);
+    expect(container.querySelector(".solid-meteor")).toBe(before);
+    expect(before.style.left).toBe(beforeLeft);
     dispose();
+  });
+
+  it("retains matching forecast objects and adopts newly entering geometry", () => {
+    const retained = { id: 1, startTime: 1, duration: 10, angle: 225, left: 100, travel: 800 };
+    const resized = { ...retained, left: 500 };
+    const entering = { id: 2, startTime: 2, duration: 10, angle: 225, left: 600, travel: 800 };
+
+    const reconciled = retainMeteorWindow([retained], [resized, entering]);
+
+    expect(reconciled[0]).toBe(retained);
+    expect(reconciled[1]).toBe(entering);
   });
 
   it("keeps the meteor timeline animated when reduced motion is preferred", () => {

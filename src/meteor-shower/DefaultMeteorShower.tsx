@@ -11,7 +11,6 @@ import "./meteor-shower.css";
 
 export const DEFAULT_METEOR_TIMELINE_SECONDS = 600;
 export const DEFAULT_METEOR_INITIAL_ELAPSED_SECONDS = 12;
-export const METEOR_RESIZE_DEBOUNCE_MS = 200;
 
 const CLOCK_EPSILON_SECONDS = 0.001;
 
@@ -34,6 +33,26 @@ export function activeMeteorWindow(
     .slice(0, Math.max(0, maxActive));
   const next = events.find((event) => event.startTime > elapsedSeconds);
   return next ? [...active, next] : active;
+}
+
+/**
+ * Keep in-flight and already-scheduled meteor objects stable when a viewport
+ * resize regenerates the deterministic forecast. Newly entering events use
+ * the latest geometry without restarting animations already in the DOM.
+ */
+export function retainMeteorWindow(
+  previous: readonly MeteorEvent[],
+  next: readonly MeteorEvent[],
+): MeteorEvent[] {
+  const retained = new Map(previous.map((event) => [event.id, event]));
+  return next.map((event) => {
+    const prior = retained.get(event.id);
+    return prior
+      && prior.startTime === event.startTime
+      && prior.duration === event.duration
+      ? prior
+      : event;
+  });
 }
 
 function nextTimelineBoundary(
@@ -60,9 +79,9 @@ function nextTimelineBoundary(
 export function DefaultMeteorShower(props: DefaultMeteorShowerProps) {
   let element!: HTMLDivElement;
   let boundaryTimer: number | undefined;
-  let resizeTimer: number | undefined;
   let cycleStartedAt = 0;
   let mounted = false;
+  let nextViewport = { width: 1, height: 1 };
   const [viewport, setViewport] = createSignal({ width: 1, height: 1 });
   const [cycle, setCycle] = createSignal(1);
   const [elapsedSeconds, setElapsedSeconds] = createSignal(0);
@@ -78,11 +97,14 @@ export function DefaultMeteorShower(props: DefaultMeteorShowerProps) {
       viewport: viewport(),
     });
   });
-  const activeEvents = createMemo(() => activeMeteorWindow(
-    events(),
-    elapsedSeconds(),
-    settings().maxActive,
-  ));
+  const activeEvents = createMemo<MeteorEvent[]>((previous) => retainMeteorWindow(
+    previous,
+    activeMeteorWindow(
+      events(),
+      elapsedSeconds(),
+      settings().maxActive,
+    ),
+  ), []);
 
   const cycleElapsed = () => Math.max(0, (performance.now() - cycleStartedAt) / 1000);
 
@@ -93,6 +115,7 @@ export function DefaultMeteorShower(props: DefaultMeteorShowerProps) {
     boundaryTimer = window.setTimeout(() => {
       if (cycleElapsed() >= duration() - CLOCK_EPSILON_SECONDS) {
         cycleStartedAt = performance.now();
+        setViewport(nextViewport);
         setElapsedSeconds(0);
         setCycle((value) => value + 1);
       } else {
@@ -104,7 +127,7 @@ export function DefaultMeteorShower(props: DefaultMeteorShowerProps) {
 
   const measure = () => {
     const { width, height } = element.getBoundingClientRect();
-    setViewport({ width: Math.max(1, width), height: Math.max(1, height) });
+    nextViewport = { width: Math.max(1, width), height: Math.max(1, height) };
   };
 
   onMount(() => {
@@ -112,16 +135,19 @@ export function DefaultMeteorShower(props: DefaultMeteorShowerProps) {
     setElapsedSeconds(initialElapsed());
     mounted = true;
     measure();
-    const resizeObserver = new ResizeObserver(() => {
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(measure, METEOR_RESIZE_DEBOUNCE_MS);
+    setViewport(nextViewport);
+    const resizeObserver = new ResizeObserver(([entry]) => {
+      if (!entry) return;
+      nextViewport = {
+        width: Math.max(1, entry.contentRect.width),
+        height: Math.max(1, entry.contentRect.height),
+      };
     });
     resizeObserver.observe(element);
     scheduleBoundary();
     onCleanup(() => {
       resizeObserver.disconnect();
       window.clearTimeout(boundaryTimer);
-      window.clearTimeout(resizeTimer);
     });
   });
 
