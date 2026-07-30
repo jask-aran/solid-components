@@ -1,6 +1,6 @@
 {
   "name": "@jask-aran/solid-components",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Portable SolidJS components from jask-aran.",
   "license": "MIT",
   "type": "module",
