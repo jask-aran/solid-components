@@ -1,9 +1,13 @@
 import { resolve } from "node:path";
-import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [solid()],
+  test: {
+    environment: "jsdom",
+    include: ["test/**/*.test.tsx"],
+  },
   build: {
     lib: {
       entry: resolve(import.meta.dirname, "src/meteor-shower/index.ts"),

@@ -1,6 +1,6 @@
 {
   "name": "@jask-aran/solid-components",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Portable SolidJS components from jask-aran.",
   "license": "MIT",
   "type": "module",
@@ -15,6 +15,12 @@
   "sideEffects": [
     "**/*.css"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  },
   "files": [
     "dist"
   ],
@@ -34,10 +40,12 @@
     "solid-js": "^1.9.0"
   },
   "devDependencies": {
+    "jsdom": "^26.1.0",
     "solid-js": "^1.9.14",
     "typescript": "^5.7.3",
     "vite": "^6.4.3",
-    "vite-plugin-solid": "^2.11.13"
+    "vite-plugin-solid": "^2.11.13",
+    "vitest": "^3.2.7"
   },
   "scripts": {
     "build": "npm run build:js && npm run build:types",
@@ -45,6 +53,7 @@
     "build:types": "tsc -p tsconfig.build.json",
     "dev": "vite --host 0.0.0.0",
     "prepare": "npm run build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   }
 }
